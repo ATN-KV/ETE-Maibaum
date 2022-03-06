@@ -63,6 +63,10 @@ def main():
 
     fig_1_GridRows = 2
     fig_1_GridCols = 2
+    fig_4_GridRows = 2
+    fig_4_GridCols = 1
+    fig_5_GridRows = 1
+    fig_5_GridCols = 1
 
     #### 2D Plot (higher resolution)
     a = np.linspace(l_St, 100, 90)
@@ -76,6 +80,8 @@ def main():
     fig_1 = plt.figure(figsize=(18, 9), constrained_layout=True)
     fig_2 = plt.figure(figsize=(18, 9), constrained_layout=True)
     fig_3 = plt.figure(figsize=(18, 9), constrained_layout=True)
+    fig_4 = plt.figure(figsize=(18, 9), constrained_layout=True)
+    fig_5 = plt.figure(figsize=(18, 9), constrained_layout=True)
 
 
     # calculations iterating
@@ -147,6 +153,10 @@ def main():
 
         # plotting results
 
+        #################################################################################
+        #################                   FIGURE 1                    #################
+        #################################################################################
+
         # plotting phi
         ax_1 = fig_1.add_subplot(fig_1_GridRows, fig_1_GridCols, 1)
         # axes labeling and title
@@ -214,6 +224,10 @@ def main():
         ax_4.grid(visible = True, color ='grey', linestyle ='-.', linewidth = 0.3, alpha = 0.8)
         # plot
         ax_4.plot(dict_sc_1["t"], dict_sc_1["rope_length"], color="#E400FF")
+
+        #################################################################################
+        #################                   FIGURE 2                    #################
+        #################################################################################
 
         # plotting alpha
         ax_1 = fig_2.add_subplot(fig_1_GridRows, fig_1_GridCols, 3)
@@ -287,6 +301,10 @@ def main():
         # plot
         ax_33.plot(dict_sc_1["t"], (dict_sc_1["alpha"] * dict_sc_1["j"]), color="#00FF2A")
 
+        #################################################################################
+        #################                   FIGURE 3                    #################
+        #################################################################################
+
         # plotting Mfmot
         ax_1 = fig_3.add_subplot(1, 2, 1)
         # axes labeling and title
@@ -327,6 +345,64 @@ def main():
         # plot
         ax_2.plot(dict_sc_1["t"], (dict_sc_1["torque_f_mot"] + dict_sc_1["alpha"] * dict_sc_1["j"]), color="#FF0000")
 
+        #################################################################################
+        #################                   FIGURE 4                    #################
+        #################################################################################
+
+        # plotting rpm
+        ax_1 = fig_4.add_subplot(fig_4_GridRows, fig_4_GridCols, 1)
+        # axes labeling and title
+        ax_1.set_xlabel("time in [s]")
+        ax_1.set_ylabel("n motor in [rpm]")
+        ax_1.set_title(f"n motor at (a = {round(a_ud, 3)}m)")
+        #### Set the X - marker stepsize
+        loc = mlt.ticker.MultipleLocator(base=1.0)
+        ax_1.xaxis.set_major_locator(loc)
+        #### Set the Y - marker stepsize
+        loc = mlt.ticker.MultipleLocator(base=250.0)
+        ax_1.yaxis.set_major_locator(loc)
+        # setting grid options
+        ax_1.grid(visible = True, color ='black', linestyle ='-.', linewidth = 0.3, alpha = 0.8)
+        # plot
+        ax_1.plot(dict_sc_1["t"], (dict_sc_1["omega_ot"]*(1/np.pi)*30), color="r")
+
+        # plotting tree angle
+        ax_1 = fig_4.add_subplot(fig_4_GridRows, fig_4_GridCols, 2)
+        # axes labeling and title
+        ax_1.set_xlabel("time in [s]")
+        ax_1.set_ylabel("tree angle in [°]")
+        ax_1.set_title(f"tree angle at (a = {round(a_ud, 3)}m)")
+        #### Set the X - marker stepsize
+        loc = mlt.ticker.MultipleLocator(base=1.0)
+        ax_1.xaxis.set_major_locator(loc)
+        #### Set the Y - marker stepsize
+        loc = mlt.ticker.MultipleLocator(base=5.0)
+        ax_1.yaxis.set_major_locator(loc)
+        # setting grid options
+        ax_1.grid(visible = True, color ='black', linestyle ='-.', linewidth = 0.3, alpha = 0.8)
+        # plot
+        ax_1.plot(dict_sc_1["t"], (dict_sc_1["tree_angle"]), color="green")
+
+        #################################################################################
+        #################                   FIGURE 5                    #################
+        #################################################################################
+
+        # plotting rpm
+        ax_1 = fig_5.add_subplot(fig_5_GridRows, fig_5_GridCols, 1)
+        # axes labeling and title
+        ax_1.set_xlabel("angle in [°]")
+        ax_1.set_ylabel("n motor in [rpm]")
+        ax_1.set_title(f"motor rpm over tree angle at (a = {round(a_ud, 3)}m)")
+        #### Set the X - marker stepsize
+        loc = mlt.ticker.MultipleLocator(base=1.0)
+        ax_1.xaxis.set_major_locator(loc)
+        #### Set the Y - marker stepsize
+        loc = mlt.ticker.MultipleLocator(base=250.0)
+        ax_1.yaxis.set_major_locator(loc)
+        # setting grid options
+        ax_1.grid(visible = True, color ='black', linestyle ='-.', linewidth = 0.3, alpha = 0.8)
+        # plot
+        ax_1.plot(dict_sc_1["tree_angle"], (dict_sc_1["omega_ot"]*(1/np.pi)*30), color="r")
 
         plt.show()
 
@@ -345,7 +421,7 @@ def func_dSdx(t, S, par_a=0.0, par_i_g=0.0, par_j=0.0, par_a_exp=0.0, par_b_exp=
     term_1 = 0
     term_2 = 0
 
-    term_1 = (-((d_hoistdrum/2) * (1/(par_i_g*par_etha_g)) * func_force(par_a, par_lr_start-(d_hoistdrum*(x/(2*par_i_g)))))) / par_j
+    term_1 = (-((d_hoistdrum/2) * (1/(par_i_g*par_etha_g)) * func_force(par_a=par_a, par_lr=(par_lr_start-(d_hoistdrum*(x/(2*par_i_g)))), par_return=0 ))) / par_j
     term_2 = ( ( ((par_a_exp*(par_b_exp**v))-par_M1) * (np.sign(v-par_Omega1)+1) * (1/2) ) + par_M1) / par_j
     func = term_1 + term_2
 
@@ -358,7 +434,7 @@ def func_calculations(par_a=0.0, par_i_g=0.0, par_res=0.0, par_M1=0.0, par_M2=0.
     force_max_motor = (par_M1*par_i_g*par_etha_g*2)/d_hoistdrum
     lr = np.linspace(lr_min, lr_max, par_res)
     for var_lr in lr:
-        x = func_force(par_a, var_lr)
+        x = func_force(par_a=par_a, par_lr=var_lr)
         if x > force_max_motor:
             dict_return = {
                 "success" : False,
@@ -367,6 +443,9 @@ def func_calculations(par_a=0.0, par_i_g=0.0, par_res=0.0, par_M1=0.0, par_M2=0.
             return dict_return
 
     time_to_finish = nan
+    # initializing tree_angle
+    tree_angle = np.linspace(0, 1, par_res)
+    tree_angle[:] = nan
     # initializing force
     F_winch = np.linspace(0, 1, par_res)
     F_winch[:] = nan
@@ -404,7 +483,7 @@ def func_calculations(par_a=0.0, par_i_g=0.0, par_res=0.0, par_M1=0.0, par_M2=0.
     alpha[:] = nan
     
     # calculation of terms for alpha
-    term_1 = ((d_hoistdrum/2) * (1/(par_i_g*par_etha_g)) * func_force(par_a, lr_start-(d_hoistdrum*(phi_ot/(2*par_i_g))))) / j
+    term_1 = ((d_hoistdrum/2) * (1/(par_i_g*par_etha_g)) * func_force(par_a=par_a, par_lr=(lr_start-(d_hoistdrum*(phi_ot/(2*par_i_g)))))) / j
     term_2 = ( ( ((a_exp*(b_exp**omega_ot))-par_M1) * (np.sign(omega_ot-par_Omega1)+1) * (1/2) ) + par_M1) / j
 
     # changing ODE results due to max omega
@@ -416,11 +495,11 @@ def func_calculations(par_a=0.0, par_i_g=0.0, par_res=0.0, par_M1=0.0, par_M2=0.
             phi_ot[i] = phi_ot[i-1] + par_Omega2 * (par_t_max / par_res)
             alpha[i] = 0
         # elif: if force is not zero but omega reached end
-        elif np.isnan(phi_ot[i]) and not np.isnan(func_force(par_a, lr_start-(d_hoistdrum*((phi_ot[i-1] + par_Omega2 * (par_t_max / par_res))/(2*par_i_g))))):
+        elif np.isnan(phi_ot[i]) and not np.isnan(func_force(par_a=par_a, par_lr=(lr_start-(d_hoistdrum*((phi_ot[i-1] + par_Omega2 * (par_t_max / par_res))/(2*par_i_g)))))):
             omega_ot[i] = par_Omega2
             phi_ot[i] = phi_ot[i-1] + par_Omega2 * (par_t_max / par_res)
             alpha[i] = 0
-            if np.isnan(func_force(par_a, lr_start-(d_hoistdrum*((phi_ot[i] + par_Omega2 * (par_t_max / par_res))/(2*par_i_g))))):
+            if np.isnan(func_force(par_a=par_a, par_lr=(lr_start-(d_hoistdrum*((phi_ot[i] + par_Omega2 * (par_t_max / par_res))/(2*par_i_g)))))):
                 omega_ot[i] = nan
                 phi_ot[i] = nan
         elif (omega_ot[i] <= par_Omega2):
@@ -428,12 +507,13 @@ def func_calculations(par_a=0.0, par_i_g=0.0, par_res=0.0, par_M1=0.0, par_M2=0.
 
 
     # calculating motor torque
-    torque_f_mot = (d_hoistdrum/2) * (1/(par_i_g*par_etha_g)) * func_force(par_a, lr_start-(d_hoistdrum*(phi_ot/(2*par_i_g))))
+    torque_f_mot = (d_hoistdrum/2) * (1/(par_i_g*par_etha_g)) * func_force(par_a=par_a, par_lr=(lr_start-(d_hoistdrum*(phi_ot/(2*par_i_g)))))
 
-    # calc force over time
+    # calc force over time and tree angle over time
     i = 0
     for x in phi_ot:
-        F_winch[i] = func_force(par_a, lr_start-(d_hoistdrum*(x/(2*par_i_g))))
+        F_winch[i] = func_force(par_a=par_a, par_lr=(lr_start-(d_hoistdrum*(x/(2*par_i_g)))))
+        tree_angle[i] = func_force(par_a=par_a, par_lr=(lr_start-(d_hoistdrum*(x/(2*par_i_g)))), par_return=1)
         i += 1
 
     # calc rope length over time and time to finish
@@ -461,7 +541,8 @@ def func_calculations(par_a=0.0, par_i_g=0.0, par_res=0.0, par_M1=0.0, par_M2=0.
         "time_to_finish" : time_to_finish,
         "j" : j,
         "alpha" : alpha,
-        "torque_f_mot": torque_f_mot
+        "torque_f_mot": torque_f_mot,
+        "tree_angle" : tree_angle
 
     }
     return dict_return
