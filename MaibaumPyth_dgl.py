@@ -1,4 +1,4 @@
-from sre_constants import SUCCESS
+#from sre_constants import SUCCESS
 from typing import Tuple
 import matplotlib as mlt
 import matplotlib.pyplot as plt
@@ -25,6 +25,9 @@ m_1 = 26.5
 m_2 = 13
 omega_1 = 1750 * (np.pi / 30)
 omega_2 = 4700 * (np.pi / 30)
+motor_kt = 0.89
+motor_nomtorque = 6.3
+
 
 # motor_type = "G4-M6-encoder"
 # j_motor = (2.4 / (100**2))
@@ -67,6 +70,10 @@ def main():
     fig_4_GridCols = 1
     fig_5_GridRows = 1
     fig_5_GridCols = 1
+    fig_6_GridRows = 1
+    fig_6_GridCols = 1
+    fig_7_GridRows = 1
+    fig_7_GridCols = 1
 
     #### 2D Plot (higher resolution)
     a = np.linspace(l_St, 100, 90)
@@ -82,6 +89,8 @@ def main():
     fig_3 = plt.figure(figsize=(18, 9), constrained_layout=True)
     fig_4 = plt.figure(figsize=(18, 9), constrained_layout=True)
     fig_5 = plt.figure(figsize=(18, 9), constrained_layout=True)
+    fig_6 = plt.figure(figsize=(18, 9), constrained_layout=True)
+    fig_7 = plt.figure(figsize=(18, 9), constrained_layout=True)
 
 
     # calculations iterating
@@ -128,7 +137,8 @@ def main():
     # calculation 1 condition
     dict_sc_1 = func_calculations(par_a=a_ud, par_i_g=i_g_ud, par_res=2000, par_M1=m_1, par_M2=m_2, 
                                     par_Omega1=omega_1, par_Omega2=omega_2, par_t_max=150, 
-                                    par_etha_g=etha_g, par_j_gearbox=j_gearbox, par_j_motor=j_motor)
+                                    par_etha_g=etha_g, par_j_gearbox=j_gearbox, par_j_motor=j_motor, 
+                                    par_motor_kt=motor_kt, par_motor_normtorque=motor_nomtorque)
 
     # printing results
     if dict_sc_1["success"] == False:
@@ -149,6 +159,7 @@ def main():
         print(f"diameter hoistdrum: {d_hoistdrum} m")
         print(f"J gearbox: {j_gearbox} kg×m²")
         print("J collective: {} kg×m²" .format(round(dict_sc_1["j"], 6)))
+        print("I therm: {} A" .format(round(dict_sc_1["I_therm"], 6)))
         print("\n\n\n\n\n")
 
         # plotting results
@@ -343,7 +354,7 @@ def main():
         #ax_2.set_ylim(-20, 25)
         # hide spines
         # plot
-        ax_2.plot(dict_sc_1["t"], (dict_sc_1["torque_f_mot"] + dict_sc_1["alpha"] * dict_sc_1["j"]), color="#FF0000")
+        ax_2.plot(dict_sc_1["t"], (dict_sc_1["torque_mot"]), color="#FF0000")
 
         #################################################################################
         #################                   FIGURE 4                    #################
@@ -404,6 +415,63 @@ def main():
         # plot
         ax_1.plot(dict_sc_1["tree_angle"], (dict_sc_1["omega_ot"]*(1/np.pi)*30), color="r")
 
+        #################################################################################
+        #################                   FIGURE 6                    #################
+        #################################################################################
+
+        # plotting rpm
+        ax_1 = fig_6.add_subplot(fig_6_GridRows, fig_6_GridCols, 1)
+        # axes labeling and title
+        ax_1.set_xlabel("time in [s]")
+        ax_1.set_ylabel("M winch in [Nm]")
+        ax_1.set_title(f"M winch at (a = {round(a_ud, 3)}m)")
+        #### Set the X - marker stepsize
+        loc = mlt.ticker.MultipleLocator(base=1.0)
+        ax_1.xaxis.set_major_locator(loc)
+        #### Set the Y - marker stepsize
+        loc = mlt.ticker.MultipleLocator(base=100.0)
+        ax_1.yaxis.set_major_locator(loc)
+        # setting grid options
+        ax_1.grid(visible = True, color ='black', linestyle ='-.', linewidth = 0.3, alpha = 0.8)
+        # plot
+        ax_1.plot(dict_sc_1["t"], (dict_sc_1["f_winch"]*(d_hoistdrum/2)), color="r")
+
+        #################################################################################
+        #################                   FIGURE 7                    #################
+        #################################################################################
+
+        # plotting Mmot
+        color = 'tab:red'
+        ax_1 = fig_7.add_subplot(1, 1, 1)
+        # axes labeling and title
+        ax_1.set_xlabel("time in [s]")
+        ax_1.set_ylabel("torque at motor in [Nm] (M_Mot)", color=color)
+        ax_1.set_title(f"torque at motor at (a = {round(a_ud, 3)}m)")
+        #### Set the X - marker stepsize
+        loc = mlt.ticker.MultipleLocator(base=2.0)
+        ax_1.xaxis.set_major_locator(loc)
+        #### Set the Y - marker stepsize
+        loc = mlt.ticker.MultipleLocator(base=0.5)
+        ax_1.yaxis.set_major_locator(loc)
+        # setting grid options
+        ax_1.grid(visible = True, color ='grey', linestyle ='-.', linewidth = 0.3, alpha = 0.8)
+        # set y lim
+        ax_1.set_ylim(-1, 30)
+        # hide spines
+        ax_1.tick_params(axis="y", labelcolor=color)
+        # plot
+        ax_1.plot(dict_sc_1["t"], (dict_sc_1["torque_mot"]), color=color)
+
+        # plotting I inst
+        color = 'tab:green'
+        ax_2 = ax_1.twinx()
+        #### Set the Y - marker stepsize
+        loc = mlt.ticker.MultipleLocator(base=0.5)
+        ax_2.yaxis.set_major_locator(loc)
+        ax_2.set_ylabel("motor currnet in [A] (kt = 0.89)", color=color)
+        ax_2.set_ylim(-1, 30)
+        ax_2.tick_params(axis="y", labelcolor=color)
+        ax_2.plot(dict_sc_1["t"], (dict_sc_1["I_inst"]), color=color)
         plt.show()
 
 
@@ -428,7 +496,7 @@ def func_dSdx(t, S, par_a=0.0, par_i_g=0.0, par_j=0.0, par_a_exp=0.0, par_b_exp=
     return [v, func]
 
 def func_calculations(par_a=0.0, par_i_g=0.0, par_res=0.0, par_M1=0.0, par_M2=0.0, par_Omega1=0.0, par_Omega2=0.0, 
-                        par_t_max=0.0, par_etha_g=0.0, par_j_gearbox=0, par_j_motor=0):
+                        par_t_max=0.0, par_etha_g=0.0, par_j_gearbox=0, par_j_motor=0, par_motor_kt=0, par_motor_normtorque=0):
     # check for max force: is the motor strong enough with the i_g and etha_g?
     # creating values for the axis
     force_max_motor = (par_M1*par_i_g*par_etha_g*2)/d_hoistdrum
@@ -449,6 +517,9 @@ def func_calculations(par_a=0.0, par_i_g=0.0, par_res=0.0, par_M1=0.0, par_M2=0.
     # initializing force
     F_winch = np.linspace(0, 1, par_res)
     F_winch[:] = nan
+    # initializing current
+    I_inst = np.linspace(0, 1, par_res)
+    I_inst[:] = nan
     # initializing rope length
     rope_length = np.linspace(0, 1, par_res)
     rope_length[:] = nan
@@ -506,8 +577,20 @@ def func_calculations(par_a=0.0, par_i_g=0.0, par_res=0.0, par_M1=0.0, par_M2=0.
             alpha = term_2 - term_1
 
 
-    # calculating motor torque
+    # calculating motor torque (without rot inertia)
     torque_f_mot = (d_hoistdrum/2) * (1/(par_i_g*par_etha_g)) * func_force(par_a=par_a, par_lr=(lr_start-(d_hoistdrum*(phi_ot/(2*par_i_g)))))
+
+    # calculating motor torque
+    torque_mot = torque_f_mot + j * alpha
+
+    # calculating I_therm average
+    I_inst = (torque_mot / par_motor_kt)
+    sum_I = 0
+    for var_i in I_inst:
+        if (not np.isnan(var_i)):
+            sum_I += ((var_i**2) * (par_t_max/par_res))
+    I_therm = np.sqrt(sum_I/(20*60))
+
 
     # calc force over time and tree angle over time
     i = 0
@@ -542,7 +625,10 @@ def func_calculations(par_a=0.0, par_i_g=0.0, par_res=0.0, par_M1=0.0, par_M2=0.
         "j" : j,
         "alpha" : alpha,
         "torque_f_mot": torque_f_mot,
-        "tree_angle" : tree_angle
+        "torque_mot": torque_mot,
+        "tree_angle" : tree_angle,
+        "I_therm" : I_therm,
+        "I_inst" : I_inst
 
     }
     return dict_return
